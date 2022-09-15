@@ -87,8 +87,8 @@ func (d *deployment) GetDeployments(filterName, namespace string, limit, page in
 func (d *deployment) GetDeploymentDetail(deploymentName, namespace string) (deployment *appsv1.Deployment, err error) {
 	deployment, err = K8s.ClientSet.AppsV1().Deployments(namespace).Get(context.TODO(), deploymentName, metav1.GetOptions{})
 	if err != nil {
-		logger.Error("获取Deployment详情失败," + err.Error())
-		return nil, errors.New("获取Deployment详情失败," + err.Error())
+		logger.Error(errors.New("获取Deployment详情失败, " + err.Error()))
+		return nil, errors.New("获取Deployment详情失败, " + err.Error())
 	}
 	return deployment, nil
 }
@@ -160,36 +160,29 @@ func (d *deployment) CreateDeployment(data *DeployCreate) (err error) {
 		//设置第一个容器的ReadnessProbe，因为我们pod中只有一个容器，所以直接使用index 0 即可
 		//如果pod中有多个容器，则这里需要使用for循环去定义
 		deployment.Spec.Template.Spec.Containers[0].ReadinessProbe = &corev1.Probe{
-			ProbeHandler: corev1.ProbeHandler{
+			Handler: corev1.Handler{
 				HTTPGet: &corev1.HTTPGetAction{
 					Path: data.HealthPath,
-					//intstr.IntOrString的作用是端口可以定义为整型，也可以定义为字符串
-					//Type=0则表示该结构体实例内的数据为整型，转json时只使用IntVal的数据
-					//Type=1则表示该结构体实例内的数据为字符串，转json时只使用StrVal的数据
 					Port: intstr.IntOrString{
 						Type:   0,
 						IntVal: data.ContainerPort,
 					},
 				},
 			},
-			//初始化等待时间
 			InitialDelaySeconds: 5,
-			//超时时间
-			TimeoutSeconds: 5,
-			//执行间隔
-			PeriodSeconds: 5,
+			TimeoutSeconds:      5,
+			PeriodSeconds:       5,
 		}
 		deployment.Spec.Template.Spec.Containers[0].LivenessProbe = &corev1.Probe{
-			ProbeHandler: corev1.ProbeHandler{
+			Handler: corev1.Handler{
 				HTTPGet: &corev1.HTTPGetAction{
 					Path: data.HealthPath,
 					Port: intstr.IntOrString{
-						Type:   0,
+						Type: 0,
 						IntVal: data.ContainerPort,
 					},
 				},
 			},
-			//初始化等待时间
 			InitialDelaySeconds: 15,
 			//超时时间
 			TimeoutSeconds: 5,
@@ -207,8 +200,9 @@ func (d *deployment) CreateDeployment(data *DeployCreate) (err error) {
 		corev1.ResourceMemory: resource.MustParse(data.Memory),
 	}
 
-	//调用SDK去更新Deployment
-	_, err = K8s.ClientSet.AppsV1().Deployments(data.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
+	//调用sdk创建deployment
+	_, err = K8s.ClientSet.AppsV1().Deployments(data.Namespace).
+		Create(context.TODO(), deployment, metav1.CreateOptions{})
 	if err != nil {
 		logger.Error(errors.New("创建Deployment失败," + err.Error()))
 		return errors.New("创建Deployment失败," + err.Error())
@@ -220,15 +214,18 @@ func (d *deployment) CreateDeployment(data *DeployCreate) (err error) {
 func (d *deployment) DeleteDeployment(deploymentName, namespace string) (err error) {
 	err = K8s.ClientSet.AppsV1().Deployments(namespace).Delete(context.TODO(), deploymentName, metav1.DeleteOptions{})
 	if err != nil {
-		logger.Error("删除Deployment失败," + err.Error())
-		return errors.New("删除Deployment失败," + err.Error())
+		logger.Error(errors.New("删除Deployment失败, " + err.Error()))
+		return errors.New("删除Deployment失败, " + err.Error())
 	}
 	return nil
 }
 
 //重启deployment
-func (d *deployment) RestartDeployment(deploymentName, namespace string) (err error) {
-	//此功能等同于kubectl命令
+func(d *deployment) RestartDeployment(deploymentName, namespace string) (err error) {
+	//此功能等同于一下kubectl命令
+	//kubectl deployment ${service} -p \
+	//'{"spec":{"template":{"spec":{"containers":[{"name":"'"${service}"'","env":[{"name":"RESTART_","value":"'$(date +%s)'"}]}]}}}}'
+
 	//使用patchData Map组装数据
 	patchData := map[string]interface{}{
 		"spec": map[string]interface{}{
@@ -258,7 +255,8 @@ func (d *deployment) RestartDeployment(deploymentName, namespace string) (err er
 		logger.Error(errors.New("重启Deployment失败," + err.Error()))
 		return errors.New("重启Deployment失败," + err.Error())
 	}
-	return
+
+	return nil
 }
 
 //更新deployment
@@ -267,13 +265,13 @@ func (d *deployment) UpdateDeployment(namespace, content string) (err error) {
 
 	err = json.Unmarshal([]byte(content), deploy)
 	if err != nil {
-		logger.Error("反序列化失败," + err.Error())
-		return errors.New("反序列化失败," + err.Error())
+		logger.Error(errors.New("反序列化失败, " + err.Error()))
+		return errors.New("反序列化失败, " + err.Error())
 	}
 	_, err = K8s.ClientSet.AppsV1().Deployments(namespace).Update(context.TODO(), deploy, metav1.UpdateOptions{})
 	if err != nil {
-		logger.Error("更新Deployment失败," + err.Error())
-		return errors.New("更新Deployment失败," + err.Error())
+		logger.Error(errors.New("更新Deployment失败, " + err.Error()))
+		return errors.New("更新Deployment失败, " + err.Error())
 	}
 	return nil
 }
@@ -290,7 +288,8 @@ func (d *deployment) GetDeployNumPerNp() (deploysNps []*DeploysNp, err error) {
 		if err != nil {
 			return nil, err
 		}
-		deploysNps := &DeploysNp{
+
+		deploysNp := &DeploysNp{
 			Namespace: namespace.Name,
 			DeployNum: len(deploymentList.Items),
 		}
