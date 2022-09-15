@@ -21,7 +21,7 @@ type deployment struct{}
 //定义列表的返回内容，Items是deployment元素列表，Total为deployment元素数量
 type DeploymentsResp struct {
 	Items []appsv1.Deployment `json:"items"`
-	Total int
+	Total int                 `json:"total"`
 }
 
 //定义DeployCreate结构体，用于创建deployment需要的参数属性的定义
@@ -38,7 +38,7 @@ type DeployCreate struct {
 	HealthPath    string            `json:"health_path"`
 }
 
-//定义DeploysNp类型,用于返回namespace中的deployment数据
+//定义DeploysNp类型，用于返回namespace中deployment的数量
 type DeploysNp struct {
 	Namespace string `json:"namespace"`
 	DeployNum int    `json:"deployment_num"`
@@ -49,12 +49,9 @@ func (d *deployment) GetDeployments(filterName, namespace string, limit, page in
 	//获取deploymentList类型的deployment列表
 	deploymentList, err := K8s.ClientSet.AppsV1().Deployments(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		//打印日志,排错
-		logger.Error("获取Deployment列表失败," + err.Error())
-		//返回给上一层，最终返回给前端，前端打印出该error
-		return nil, errors.New("获取Deployment列表失败," + err.Error())
+		logger.Error(errors.New("获取Deployment列表失败, " + err.Error()))
+		return nil, errors.New("获取Deployment列表失败, " + err.Error())
 	}
-
 	//将deploymentList中的deployment列表(Items)，放进dataselector对象中，进行排序
 	selectableData := &dataSelector{
 		GenericDataList: d.toCells(deploymentList.Items),
@@ -67,74 +64,69 @@ func (d *deployment) GetDeployments(filterName, namespace string, limit, page in
 		},
 	}
 
-	//先过滤
 	filtered := selectableData.Filter()
 	total := len(filtered.GenericDataList)
-	//排序和分页
 	data := filtered.Sort().Paginate()
 
-	//将DataCell类型的deployment列表转换成appsv1.deployment列表
+	//将[]DataCell类型的deployment列表转为appsv1.deployment列表
 	deployments := d.fromCells(data.GenericDataList)
 
 	return &DeploymentsResp{
 		Items: deployments,
 		Total: total,
 	}, nil
-
 }
 
-//获取Deployment详情
+//获取deployment详情
 func (d *deployment) GetDeploymentDetail(deploymentName, namespace string) (deployment *appsv1.Deployment, err error) {
 	deployment, err = K8s.ClientSet.AppsV1().Deployments(namespace).Get(context.TODO(), deploymentName, metav1.GetOptions{})
 	if err != nil {
 		logger.Error(errors.New("获取Deployment详情失败, " + err.Error()))
 		return nil, errors.New("获取Deployment详情失败, " + err.Error())
 	}
+
 	return deployment, nil
 }
 
-//修改Deployment副本数
+//设置deployment副本数
 func (d *deployment) ScaleDeployment(deploymentName, namespace string, scaleNum int) (replica int32, err error) {
 	//获取autoscalingv1.Scale类型的对象，能点出当前的副本数
 	scale, err := K8s.ClientSet.AppsV1().Deployments(namespace).GetScale(context.TODO(), deploymentName, metav1.GetOptions{})
 	if err != nil {
-		logger.Error(errors.New("获取Deployment副本数信息失败," + err.Error()))
-		return 0, errors.New("获取Deployment副本数信息失败," + err.Error())
+		logger.Error(errors.New("获取Deployment副本数信息失败, " + err.Error()))
+		return 0, errors.New("获取Deployment副本数信息失败, " + err.Error())
 	}
 	//修改副本数
 	scale.Spec.Replicas = int32(scaleNum)
 	//更新副本数，传入scale对象
 	newScale, err := K8s.ClientSet.AppsV1().Deployments(namespace).UpdateScale(context.TODO(), deploymentName, scale, metav1.UpdateOptions{})
 	if err != nil {
-		logger.Error(errors.New("更新Deployment副本数信息失败," + err.Error()))
-		return 0, errors.New("更新Deployment副本数信息失败," + err.Error())
+		logger.Error(errors.New("更新Deployment副本数信息失败, " + err.Error()))
+		return 0, errors.New("更新Deployment副本数信息失败, " + err.Error())
 	}
+
 	return newScale.Spec.Replicas, nil
 }
 
-//创建Deployment,接收DeployCreate对象
+//创建deployment，接收DeployCreate对象
 func (d *deployment) CreateDeployment(data *DeployCreate) (err error) {
 	//初始化appsv1.Deployment类型的对象，并将入参的data数据放进去
 	deployment := &appsv1.Deployment{
-		//ObjectMeta中定义资源名、命名空间以及标签
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      data.Name,
 			Namespace: data.Namespace,
 			Labels:    data.Label,
 		},
-		//Spec中定义副本数、选择器、以及Pod属性
 		Spec: appsv1.DeploymentSpec{
 			Replicas: &data.Replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: data.Label,
 			},
 			Template: corev1.PodTemplateSpec{
-				//定义Pod名和标签
 				ObjectMeta: metav1.ObjectMeta{
 					Name:   data.Name,
 					Labels: data.Label,
 				},
-				//定义容器名、镜像和端口
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
 						{
@@ -152,15 +144,12 @@ func (d *deployment) CreateDeployment(data *DeployCreate) (err error) {
 				},
 			},
 		},
-		//Status定义资源的运行状态，这里由于是新建，传入空的appsv1.DeploymentStatus{}对象即可
 		Status: appsv1.DeploymentStatus{},
 	}
-	//判断是否打开健康检查功能，如果打开，则定义ReadinessProbe和LivenessProbe
+	//判断健康检查功能是否打开，若打开，则增加健康检查功能
 	if data.HealthCheck {
-		//设置第一个容器的ReadnessProbe，因为我们pod中只有一个容器，所以直接使用index 0 即可
-		//如果pod中有多个容器，则这里需要使用for循环去定义
 		deployment.Spec.Template.Spec.Containers[0].ReadinessProbe = &corev1.Probe{
-			Handler: corev1.Handler{
+			ProbeHandler: corev1.ProbeHandler{
 				HTTPGet: &corev1.HTTPGetAction{
 					Path: data.HealthPath,
 					Port: intstr.IntOrString{
@@ -174,20 +163,18 @@ func (d *deployment) CreateDeployment(data *DeployCreate) (err error) {
 			PeriodSeconds:       5,
 		}
 		deployment.Spec.Template.Spec.Containers[0].LivenessProbe = &corev1.Probe{
-			Handler: corev1.Handler{
+			ProbeHandler: corev1.ProbeHandler{
 				HTTPGet: &corev1.HTTPGetAction{
 					Path: data.HealthPath,
 					Port: intstr.IntOrString{
-						Type: 0,
+						Type:   0,
 						IntVal: data.ContainerPort,
 					},
 				},
 			},
 			InitialDelaySeconds: 15,
-			//超时时间
-			TimeoutSeconds: 5,
-			//执行间隔
-			PeriodSeconds: 5,
+			TimeoutSeconds:      5,
+			PeriodSeconds:       5,
 		}
 	}
 	//定义容器的limit和request资源
@@ -204,9 +191,10 @@ func (d *deployment) CreateDeployment(data *DeployCreate) (err error) {
 	_, err = K8s.ClientSet.AppsV1().Deployments(data.Namespace).
 		Create(context.TODO(), deployment, metav1.CreateOptions{})
 	if err != nil {
-		logger.Error(errors.New("创建Deployment失败," + err.Error()))
-		return errors.New("创建Deployment失败," + err.Error())
+		logger.Error(errors.New("创建Deployment失败, " + err.Error()))
+		return errors.New("创建Deployment失败, " + err.Error())
 	}
+
 	return nil
 }
 
@@ -217,11 +205,12 @@ func (d *deployment) DeleteDeployment(deploymentName, namespace string) (err err
 		logger.Error(errors.New("删除Deployment失败, " + err.Error()))
 		return errors.New("删除Deployment失败, " + err.Error())
 	}
+
 	return nil
 }
 
 //重启deployment
-func(d *deployment) RestartDeployment(deploymentName, namespace string) (err error) {
+func (d *deployment) RestartDeployment(deploymentName, namespace string) (err error) {
 	//此功能等同于一下kubectl命令
 	//kubectl deployment ${service} -p \
 	//'{"spec":{"template":{"spec":{"containers":[{"name":"'"${service}"'","env":[{"name":"RESTART_","value":"'$(date +%s)'"}]}]}}}}'
@@ -246,14 +235,14 @@ func(d *deployment) RestartDeployment(deploymentName, namespace string) (err err
 	//序列化为字节，因为patch方法只接收字节类型参数
 	patchByte, err := json.Marshal(patchData)
 	if err != nil {
-		logger.Error(errors.New("josn序列化失败," + err.Error()))
-		return errors.New("json序列化失败," + err.Error())
+		logger.Error(errors.New("json序列化失败, " + err.Error()))
+		return errors.New("json序列化失败, " + err.Error())
 	}
 	//调用patch方法更新deployment
 	_, err = K8s.ClientSet.AppsV1().Deployments(namespace).Patch(context.TODO(), deploymentName, "application/strategic-merge-patch+json", patchByte, metav1.PatchOptions{})
 	if err != nil {
-		logger.Error(errors.New("重启Deployment失败," + err.Error()))
-		return errors.New("重启Deployment失败," + err.Error())
+		logger.Error(errors.New("重启Deployment失败, " + err.Error()))
+		return errors.New("重启Deployment失败, " + err.Error())
 	}
 
 	return nil
@@ -268,6 +257,7 @@ func (d *deployment) UpdateDeployment(namespace, content string) (err error) {
 		logger.Error(errors.New("反序列化失败, " + err.Error()))
 		return errors.New("反序列化失败, " + err.Error())
 	}
+
 	_, err = K8s.ClientSet.AppsV1().Deployments(namespace).Update(context.TODO(), deploy, metav1.UpdateOptions{})
 	if err != nil {
 		logger.Error(errors.New("更新Deployment失败, " + err.Error()))
@@ -282,7 +272,6 @@ func (d *deployment) GetDeployNumPerNp() (deploysNps []*DeploysNp, err error) {
 	if err != nil {
 		return nil, err
 	}
-
 	for _, namespace := range namespaceList.Items {
 		deploymentList, err := K8s.ClientSet.AppsV1().Deployments(namespace.Name).List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
@@ -293,12 +282,13 @@ func (d *deployment) GetDeployNumPerNp() (deploysNps []*DeploysNp, err error) {
 			Namespace: namespace.Name,
 			DeployNum: len(deploymentList.Items),
 		}
+
 		deploysNps = append(deploysNps, deploysNp)
 	}
 	return deploysNps, nil
 }
 
-//类型转换的方法
+//类型转换
 func (d *deployment) toCells(deployments []appsv1.Deployment) []DataCell {
 	cells := make([]DataCell, len(deployments))
 	for i := range deployments {
@@ -310,7 +300,7 @@ func (d *deployment) toCells(deployments []appsv1.Deployment) []DataCell {
 func (d *deployment) fromCells(cells []DataCell) []appsv1.Deployment {
 	deployments := make([]appsv1.Deployment, len(cells))
 	for i := range cells {
-		//cells[i].(podCell)是将DataCell类型转成podCell类型
+		//cells[i].(podCell)是将DataCell类型转成podCell
 		deployments[i] = appsv1.Deployment(cells[i].(deploymentCell))
 	}
 	return deployments
