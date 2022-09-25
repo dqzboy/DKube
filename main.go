@@ -2,9 +2,9 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"k8s-platform/config"
-	"k8s-platform/controller"
-	"k8s-platform/service"
+	"dkube/config"
+	"dkube/controller"
+	"dkube/service"
 )
 
 func main() {
