@@ -15,13 +15,10 @@ var (
 	err    error
 )
 
-//db的初始化函数，与数据库建立连接
 func Init() {
-	//判断是否已经初始化了
 	if isInit {
 		return
 	}
-	//组装连接配置；loc是MySQL的时区设置
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		config.DbUser,
 		config.DbPwd,
