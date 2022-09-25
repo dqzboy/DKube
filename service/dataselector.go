@@ -10,7 +10,7 @@ import (
 )
 
 
-type dataSelector struct { //包内调用，首字母小写
+type dataSelector struct {
 	GenericDataList []DataCell
 	DataSelect      *DataSelectQuery
 }
