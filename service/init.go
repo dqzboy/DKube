@@ -2,7 +2,7 @@ package service
 
 import (
 	"github.com/wonderivan/logger"
-	"k8s-platform/config"
+	"dkube/config"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 )
