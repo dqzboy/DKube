@@ -31,13 +31,11 @@ type ServiceCreate struct {
 
 //获取service列表，支持过滤、排序、分页
 func (s *servicev1) GetServices(filterName, namespace string, limit, page int) (servicesResp *ServicesResp, err error) {
-	//获取serviceList类型的service列表
 	serviceList, err := K8s.ClientSet.CoreV1().Services(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		logger.Error(errors.New("获取Service列表失败, " + err.Error()))
 		return nil, errors.New("获取Service列表失败, " + err.Error())
 	}
-	//将serviceList中的service列表(Items)，放进dataselector对象中，进行排序
 	selectableData := &dataSelector{
 		GenericDataList: s.toCells(serviceList.Items),
 		DataSelect: &DataSelectQuery{
@@ -73,9 +71,7 @@ func (s *servicev1) GetServicetDetail(serviceName, namespace string) (service *c
 	return service, nil
 }
 
-//创建service,,接收ServiceCreate对象
 func (s *servicev1) CreateService(data *ServiceCreate) (err error) {
-	//将data中的数据组装成corev1.Service对象
 	service := &corev1.Service{
 		//ObjectMeta中定义资源名、命名空间以及标签
 		ObjectMeta: metav1.ObjectMeta{
@@ -83,7 +79,7 @@ func (s *servicev1) CreateService(data *ServiceCreate) (err error) {
 			Namespace: data.Namespace,
 			Labels:    data.Label,
 		},
-		//Spec中定义类型，端口，选择器
+
 		Spec: corev1.ServiceSpec{
 			Type: corev1.ServiceType(data.Type),
 			Ports: []corev1.ServicePort{
@@ -100,7 +96,6 @@ func (s *servicev1) CreateService(data *ServiceCreate) (err error) {
 			Selector: data.Label,
 		},
 	}
-	//默认ClusterIP,这里是判断NodePort,添加配置
 	if data.NodePort != 0 && data.Type == "NodePort" {
 		service.Spec.Ports[0].NodePort = data.NodePort
 	}
