@@ -4,7 +4,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Router 初始化router类型的对象，首字母大写，用于跨包调用（跨目录调用）
 var Router router
 
 //声明router结构体
