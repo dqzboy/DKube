@@ -3,6 +3,7 @@ package service
 import (
 	appsv1 "k8s.io/api/apps/v1" //引入K8s的APPSv1的包.定义别名为appsv1
 	corev1 "k8s.io/api/core/v1" //引入K8s的corev1的包.定义别名为corev1
+	nwv1 "k8s.io/api/networking/v1"
 	"sort"
 	"strings"
 	"time"
@@ -136,4 +137,25 @@ func (d deploymentCell) GetCreation() time.Time {
 
 func (d deploymentCell) GetName() string {
 	return d.Name
+}
+
+type serviceCell corev1.Service
+
+func (s serviceCell) GetCreation() time.Time {
+	return s.CreationTimestamp.Time
+}
+
+func (s serviceCell) GetName() string {
+	return s.Name
+}
+
+//追加ingress DataCell接口相关代码
+type ingressCell nwv1.Ingress
+
+func (i ingressCell) GetCreation() time.Time {
+	return i.CreationTimestamp.Time
+}
+
+func (i ingressCell) GetName() string {
+	return i.Name
 }

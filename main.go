@@ -1,10 +1,10 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
 	"dkube/config"
 	"dkube/controller"
 	"dkube/service"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
