@@ -29,7 +29,6 @@ type ServiceCreate struct {
 	Label         map[string]string `json:"label"`
 }
 
-//获取service列表，支持过滤、排序、分页
 func (s *servicev1) GetServices(filterName, namespace string, limit, page int) (servicesResp *ServicesResp, err error) {
 	serviceList, err := K8s.ClientSet.CoreV1().Services(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
@@ -50,8 +49,6 @@ func (s *servicev1) GetServices(filterName, namespace string, limit, page int) (
 	filtered := selectableData.Filter()
 	total := len(filtered.GenericDataList)
 	data := filtered.Sort().Paginate()
-
-	//将[]DataCell类型的service列表转为v1.service列表
 	services := s.fromCells(data.GenericDataList)
 
 	return &ServicesResp{
@@ -60,7 +57,6 @@ func (s *servicev1) GetServices(filterName, namespace string, limit, page int) (
 	}, nil
 }
 
-//获取service详情
 func (s *servicev1) GetServicetDetail(serviceName, namespace string) (service *corev1.Service, err error) {
 	service, err = K8s.ClientSet.CoreV1().Services(namespace).Get(context.TODO(), serviceName, metav1.GetOptions{})
 	if err != nil {
@@ -73,13 +69,11 @@ func (s *servicev1) GetServicetDetail(serviceName, namespace string) (service *c
 
 func (s *servicev1) CreateService(data *ServiceCreate) (err error) {
 	service := &corev1.Service{
-		//ObjectMeta中定义资源名、命名空间以及标签
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      data.Name,
 			Namespace: data.Namespace,
 			Labels:    data.Label,
 		},
-
 		Spec: corev1.ServiceSpec{
 			Type: corev1.ServiceType(data.Type),
 			Ports: []corev1.ServicePort{
@@ -99,7 +93,6 @@ func (s *servicev1) CreateService(data *ServiceCreate) (err error) {
 	if data.NodePort != 0 && data.Type == "NodePort" {
 		service.Spec.Ports[0].NodePort = data.NodePort
 	}
-	//创建Service
 	_, err = K8s.ClientSet.CoreV1().Services(data.Namespace).Create(context.TODO(), service, metav1.CreateOptions{})
 	if err != nil {
 		logger.Error(errors.New("创建Service失败, " + err.Error()))
@@ -109,7 +102,6 @@ func (s *servicev1) CreateService(data *ServiceCreate) (err error) {
 	return nil
 }
 
-//删除service
 func (s *servicev1) DeleteService(serviceName, namespace string) (err error) {
 	err = K8s.ClientSet.CoreV1().Services(namespace).Delete(context.TODO(), serviceName, metav1.DeleteOptions{})
 	if err != nil {
@@ -120,7 +112,6 @@ func (s *servicev1) DeleteService(serviceName, namespace string) (err error) {
 	return nil
 }
 
-//更新service
 func (s *servicev1) UpdateService(namespace, content string) (err error) {
 	var service = &corev1.Service{}
 

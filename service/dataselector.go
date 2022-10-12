@@ -9,18 +9,15 @@ import (
 	"time"
 )
 
-
 type dataSelector struct {
 	GenericDataList []DataCell
 	DataSelect      *DataSelectQuery
 }
 
-
 type DataCell interface {
 	GetCreation() time.Time
 	GetName() string
 }
-
 
 type DataSelectQuery struct {
 	Filter   *FilterQuery
@@ -36,11 +33,9 @@ type PaginateQuery struct {
 	Page  int
 }
 
-
 func (d *dataSelector) Len() int {
 	return len(d.GenericDataList)
 }
-
 
 func (d *dataSelector) Swap(i, j int) {
 	d.GenericDataList[i], d.GenericDataList[j] = d.GenericDataList[j], d.GenericDataList[i]
@@ -49,6 +44,7 @@ func (d *dataSelector) Swap(i, j int) {
 func (d *dataSelector) Less(i, j int) bool {
 	a := d.GenericDataList[i].GetCreation()
 	b := d.GenericDataList[j].GetCreation()
+
 	return b.Before(a)
 }
 
@@ -65,7 +61,7 @@ func (d *dataSelector) Filter() *dataSelector {
 	for _, value := range d.GenericDataList {
 		matches := true
 		objName := value.GetName()
-		if strings.Contains(objName, d.DataSelect.Filter.Name) {
+		if !strings.Contains(objName, d.DataSelect.Filter.Name) {
 			matches = false
 			continue
 		}
@@ -73,7 +69,6 @@ func (d *dataSelector) Filter() *dataSelector {
 			filtered = append(filtered, value)
 		}
 	}
-
 	d.GenericDataList = filtered
 	return d
 }
@@ -81,11 +76,9 @@ func (d *dataSelector) Filter() *dataSelector {
 func (d *dataSelector) Paginate() *dataSelector {
 	limit := d.DataSelect.Paginate.Limit
 	page := d.DataSelect.Paginate.Page
-
 	if limit <= 0 || page <= 0 {
 		return d
 	}
-
 	startIndex := limit * (page - 1)
 	endIndex := limit*page - 1
 
@@ -118,6 +111,56 @@ func (d deploymentCell) GetName() string {
 	return d.Name
 }
 
+type daemonSetCell appsv1.DaemonSet
+
+func (d daemonSetCell) GetCreation() time.Time {
+	return d.CreationTimestamp.Time
+}
+
+func (d daemonSetCell) GetName() string {
+	return d.Name
+}
+
+type statefulSetCell appsv1.StatefulSet
+
+func (s statefulSetCell) GetCreation() time.Time {
+	return s.CreationTimestamp.Time
+}
+
+func (s statefulSetCell) GetName() string {
+	return s.Name
+}
+
+type nodeCell corev1.Node
+
+func (n nodeCell) GetCreation() time.Time {
+	return n.CreationTimestamp.Time
+}
+
+func (n nodeCell) GetName() string {
+	return n.Name
+}
+
+type namespaceCell corev1.Namespace
+
+func (n namespaceCell) GetCreation() time.Time {
+	return n.CreationTimestamp.Time
+}
+
+func (n namespaceCell) GetName() string {
+	return n.Name
+}
+
+type pvCell corev1.PersistentVolume
+
+func (p pvCell) GetCreation() time.Time {
+	return p.CreationTimestamp.Time
+}
+
+func (p pvCell) GetName() string {
+	return p.Name
+}
+
 type serviceCell corev1.Service
 
 func (s serviceCell) GetCreation() time.Time {
@@ -136,4 +179,34 @@ func (i ingressCell) GetCreation() time.Time {
 
 func (i ingressCell) GetName() string {
 	return i.Name
+}
+
+type configMapCell corev1.ConfigMap
+
+func (c configMapCell) GetCreation() time.Time {
+	return c.CreationTimestamp.Time
+}
+
+func (c configMapCell) GetName() string {
+	return c.Name
+}
+
+type secretCell corev1.Secret
+
+func (s secretCell) GetCreation() time.Time {
+	return s.CreationTimestamp.Time
+}
+
+func (s secretCell) GetName() string {
+	return s.Name
+}
+
+type pvcCell corev1.PersistentVolumeClaim
+
+func (p pvcCell) GetCreation() time.Time {
+	return p.CreationTimestamp.Time
+}
+
+func (p pvcCell) GetName() string {
+	return p.Name
 }

@@ -41,7 +41,6 @@ type DeploysNp struct {
 	DeployNum int    `json:"deployment_num"`
 }
 
-//获取deployment列表，支持过滤、排序、分页
 func (d *deployment) GetDeployments(filterName, namespace string, limit, page int) (deploymentsResp *DeploymentsResp, err error) {
 	deploymentList, err := K8s.ClientSet.AppsV1().Deployments(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
@@ -71,7 +70,6 @@ func (d *deployment) GetDeployments(filterName, namespace string, limit, page in
 	}, nil
 }
 
-//获取deployment详情
 func (d *deployment) GetDeploymentDetail(deploymentName, namespace string) (deployment *appsv1.Deployment, err error) {
 	deployment, err = K8s.ClientSet.AppsV1().Deployments(namespace).Get(context.TODO(), deploymentName, metav1.GetOptions{})
 	if err != nil {
@@ -82,14 +80,12 @@ func (d *deployment) GetDeploymentDetail(deploymentName, namespace string) (depl
 	return deployment, nil
 }
 
-//设置deployment副本数
 func (d *deployment) ScaleDeployment(deploymentName, namespace string, scaleNum int) (replica int32, err error) {
 	scale, err := K8s.ClientSet.AppsV1().Deployments(namespace).GetScale(context.TODO(), deploymentName, metav1.GetOptions{})
 	if err != nil {
 		logger.Error(errors.New("获取Deployment副本数信息失败, " + err.Error()))
 		return 0, errors.New("获取Deployment副本数信息失败, " + err.Error())
 	}
-
 	scale.Spec.Replicas = int32(scaleNum)
 	newScale, err := K8s.ClientSet.AppsV1().Deployments(namespace).UpdateScale(context.TODO(), deploymentName, scale, metav1.UpdateOptions{})
 	if err != nil {
@@ -100,7 +96,6 @@ func (d *deployment) ScaleDeployment(deploymentName, namespace string, scaleNum 
 	return newScale.Spec.Replicas, nil
 }
 
-//创建deployment，接收DeployCreate对象
 func (d *deployment) CreateDeployment(data *DeployCreate) (err error) {
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -137,7 +132,7 @@ func (d *deployment) CreateDeployment(data *DeployCreate) (err error) {
 		},
 		Status: appsv1.DeploymentStatus{},
 	}
-	//判断健康检查功能是否打开，若打开，则增加健康检查功能
+
 	if data.HealthCheck {
 		deployment.Spec.Template.Spec.Containers[0].ReadinessProbe = &corev1.Probe{
 			ProbeHandler: corev1.ProbeHandler{
@@ -168,7 +163,7 @@ func (d *deployment) CreateDeployment(data *DeployCreate) (err error) {
 			PeriodSeconds:       5,
 		}
 	}
-	//定义容器的limit和request资源
+
 	deployment.Spec.Template.Spec.Containers[0].Resources.Limits = map[corev1.ResourceName]resource.Quantity{
 		corev1.ResourceCPU:    resource.MustParse(data.Cpu),
 		corev1.ResourceMemory: resource.MustParse(data.Memory),
@@ -188,7 +183,6 @@ func (d *deployment) CreateDeployment(data *DeployCreate) (err error) {
 	return nil
 }
 
-//删除deployment
 func (d *deployment) DeleteDeployment(deploymentName, namespace string) (err error) {
 	err = K8s.ClientSet.AppsV1().Deployments(namespace).Delete(context.TODO(), deploymentName, metav1.DeleteOptions{})
 	if err != nil {
@@ -199,7 +193,6 @@ func (d *deployment) DeleteDeployment(deploymentName, namespace string) (err err
 	return nil
 }
 
-//重启deployment
 func (d *deployment) RestartDeployment(deploymentName, namespace string) (err error) {
 	patchData := map[string]interface{}{
 		"spec": map[string]interface{}{
@@ -217,7 +210,6 @@ func (d *deployment) RestartDeployment(deploymentName, namespace string) (err er
 			},
 		},
 	}
-
 	patchByte, err := json.Marshal(patchData)
 	if err != nil {
 		logger.Error(errors.New("json序列化失败, " + err.Error()))
@@ -232,7 +224,6 @@ func (d *deployment) RestartDeployment(deploymentName, namespace string) (err er
 	return nil
 }
 
-//更新deployment
 func (d *deployment) UpdateDeployment(namespace, content string) (err error) {
 	var deploy = &appsv1.Deployment{}
 
@@ -250,7 +241,6 @@ func (d *deployment) UpdateDeployment(namespace, content string) (err error) {
 	return nil
 }
 
-//获取每个namespace的deployment数量
 func (d *deployment) GetDeployNumPerNp() (deploysNps []*DeploysNp, err error) {
 	namespaceList, err := K8s.ClientSet.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
@@ -272,7 +262,6 @@ func (d *deployment) GetDeployNumPerNp() (deploysNps []*DeploysNp, err error) {
 	return deploysNps, nil
 }
 
-//类型转换
 func (d *deployment) toCells(deployments []appsv1.Deployment) []DataCell {
 	cells := make([]DataCell, len(deployments))
 	for i := range deployments {
@@ -284,7 +273,6 @@ func (d *deployment) toCells(deployments []appsv1.Deployment) []DataCell {
 func (d *deployment) fromCells(cells []DataCell) []appsv1.Deployment {
 	deployments := make([]appsv1.Deployment, len(cells))
 	for i := range cells {
-		//cells[i].(podCell)是将DataCell类型转成podCell
 		deployments[i] = appsv1.Deployment(cells[i].(deploymentCell))
 	}
 	return deployments

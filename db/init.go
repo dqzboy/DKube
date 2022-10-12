@@ -30,10 +30,8 @@ func Init() {
 		panic("数据库连接失败," + err.Error())
 	}
 
-	//打印sql语句
 	GORM.LogMode(config.LogMode)
 
-	//开启连接池
 	GORM.DB().SetMaxIdleConns(config.MaxIdleConns)
 	GORM.DB().SetMaxOpenConns(config.MaxOpenConns)
 	GORM.DB().SetConnMaxLifetime(time.Duration(config.MaxLifeTime))
@@ -42,7 +40,6 @@ func Init() {
 	logger.Info("数据库初始化成功！")
 }
 
-//关闭数据库连接
 func Close() error {
 	fmt.Println("测试db是否关闭")
 	return GORM.Close()
