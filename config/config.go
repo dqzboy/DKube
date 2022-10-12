@@ -4,7 +4,7 @@ import "time"
 
 const (
 	ListenAddr = "0.0.0.0:9090"
-	Kubeconfig = "E:\\kubeconfig\\config"
+	Kubeconfig = "/root/.kube/config"
 
 	//tail的日志行数
 	PodLogTailLine = 2000
