@@ -76,6 +76,9 @@ Kubeconfig = "/root/.kube/config"
 - 后端
 ```go
 env GOOS=linux GOARCH=amd64 go build -o DKube-Server main.go
+
+ ~]# chmod +x DKube-Server 
+ ~]# ./DKube-Server
 ```
 
 - 前端 `dkube-web`
