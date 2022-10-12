@@ -70,5 +70,6 @@ This is a K8s cluster management platform；DKube Provides a wizard-style operat
 
 - 前端 `dkube-web`，后端接口：`src\views\common\Config.js`
 ```shell
+npm install
 npm run build
 ```
