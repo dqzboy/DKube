@@ -64,3 +64,14 @@ This is a K8s cluster management platform；DKube Provides a wizard-style operat
     <tr>
     </tr>
 </table>
+
+
+## 使用
+- 修改config路径`config/config.go`
+
+`Kubeconfig = "/root/.kube/config"`
+- 后端
+`env GOOS=linux GOARCH=amd64 go build -o DKube-Server main.go`
+
+- 前端`dkube-web`
+`npm run build`
