@@ -1,0 +1,319 @@
+<template>
+    <div class="node">
+        <el-row>
+            <el-col :span="24">
+                <div>
+                    <el-card class="node-head-card" shadow="never" :body-style="{padding:'10px'}">
+                        <el-row>
+                            <el-col :span="2">
+                                <div>
+                                    <el-button disabled style="border-radius:2px;" icon="Edit" type="primary">创建</el-button>
+                                </div>
+                            </el-col>
+                            <el-col :span="6">
+                                <div>
+                                    <el-input class="node-head-search" clearable placeholder="请输入" v-model="searchInput"></el-input>
+                                    <el-button style="border-radius:2px;" icon="Search" type="primary" plain @click="getNodes()">搜索</el-button>
+                                </div>
+                            </el-col>
+                            <el-col :span="2" :offset="14">
+                                <div>
+                                    <el-button style="border-radius:2px;" icon="Refresh" plain @click="getNodes()">刷新</el-button>
+                                </div>
+                            </el-col>
+                        </el-row>
+                    </el-card>
+                </div>
+            </el-col>
+            <el-col :span="24">
+                <div>
+                    <el-card class="node-body-card" shadow="never" :body-style="{padding:'5px'}">
+                        <el-table
+                        style="width:100%;font-size:12px;margin-bottom:10px;"
+                        :data="nodeList"
+                        v-loading="appLoading">
+                            <el-table-column width="20"></el-table-column>
+                            <el-table-column align=left label="Node名">
+                                <template v-slot="scope">
+                                    <p class="node-body-nodename">{{ scope.row.metadata.name }}</p>
+                                    <p class="node-body-ip">{{ scope.row.status.addresses[0].address }}</p>
+                                </template>
+                            </el-table-column>
+                            <el-table-column align=center label="规格">
+                                <template v-slot="scope">
+                                    <el-tag type="warning">{{ scope.row.status.capacity.cpu }}核{{ specTrans(scope.row.status.capacity.memory) }}G</el-tag>
+                                </template>
+                            </el-table-column>
+                            <el-table-column align=center label="POD-CIDR">
+                                <template v-slot="scope">
+                                    <span>{{ scope.row.spec.podCIDR }} </span>
+                                </template>
+                            </el-table-column>
+                            <el-table-column align=center label="版本">
+                                <template v-slot="scope">
+                                    <span>{{ scope.row.status.nodeInfo.kubeletVersion }} </span>
+                                </template>
+                            </el-table-column>
+                            <el-table-column align=center min-width="100" label="创建时间">
+                                <template v-slot="scope">
+                                    <el-tag type="info">{{ timeTrans(scope.row.metadata.creationTimestamp) }} </el-tag>
+                                </template>
+                            </el-table-column>
+                            <el-table-column align=center label="操作" min-width="120">
+                                <template v-slot="scope">
+                                    <el-button size="small" style="border-radius:2px;" icon="Edit" type="primary" plain @click="getNodeDetail(scope)">YAML</el-button>
+                                    <el-button disabled size="small" style="border-radius:2px;" icon="Document" type="warning" plain @click="handleConfirm(scope, '删除', delIngress)">详情</el-button>
+                                </template>
+                            </el-table-column>
+                        </el-table>
+                        <el-pagination
+                        class="node-body-pagination"
+                        background
+                        @size-change="handleSizeChange"
+                        @current-change="handleCurrentChange"
+                        :current-page="currentPage"
+                        :page-sizes="pagesizeList"
+                        :page-size="pagesize"
+                        layout="total, sizes, prev, pager, next, jumper"
+                        :total="nodeTotal">
+                        </el-pagination>
+                    </el-card>
+                </div>
+            </el-col>
+        </el-row>
+        <el-dialog title="YAML信息" v-model="yamlDialog" width="45%" top="5%">
+            <codemirror
+                :value="contentYaml"
+                border
+                :options="cmOptions"
+                height="500"
+                style="font-size:14px;"
+                @change="onChange"
+            ></codemirror>
+            <template #footer>
+                <span class="dialog-footer">
+                    <el-button @click="yamlDialog = false">取 消</el-button>
+                    <el-button disabled type="primary" @click="updateNode()">更 新</el-button>
+                </span>
+            </template>
+        </el-dialog>
+    </div>
+</template>
+
+<script>
+import common from "../common/Config";
+import httpClient from '../../utils/request';
+import yaml2obj from 'js-yaml';
+import json2yaml from 'json2yaml';
+export default {
+    data() {
+        return {
+            cmOptions: common.cmOptions,
+            contentYaml: '',
+            currentPage: 1,
+            pagesize: 10,
+            pagesizeList: [10, 20, 30],
+            searchInput: '',
+            namespaceValue: 'default',
+            namespaceList: [],
+            namespaceListUrl: common.k8sNamespaceList,
+            appLoading: false,
+            nodeList: [],
+            nodeTotal: 0,
+            getNodesData: {
+                url: common.k8sNodeList,
+                params: {
+                    filter_name: '',
+                    namespace: '',
+                    page: '',
+                    limit: '',
+                }
+            },
+            nodeDetail: {},
+            getNodeDetailData: {
+                url: common.k8sNodeDetail,
+                params: {
+                    node_name: '',
+                    namespace: ''
+                }
+            },
+            yamlDialog: false,
+            updateNodeData: {
+                url: common.k8sNodeUpdate,
+                params: {
+                    namespace: '',
+                    content: ''
+                }
+            },
+            delNodeData: {
+                url: common.k8snodeDel,
+                params: {
+                    node_name: '',
+                    namespace: '',
+                }
+            }
+        }
+    },
+    methods: {
+        transYaml(content) {
+            return json2yaml.stringify(content)
+        },
+        transObj(content) {
+            return yaml2obj.load(content)
+        },
+        onChange(val) {
+            this.contentYaml = val
+        },
+        handleSizeChange(size) {
+            this.pagesize = size;
+            this.getNodes()
+        },
+        handleCurrentChange(currentPage) {
+            this.currentPage = currentPage;
+            this.getNodes()
+        },
+        handleClose(done) {
+            this.$confirm('确认关闭？')
+            .then(() => {
+                done();
+            })
+            .catch(() => {});
+        },
+        ellipsis(value) {
+            return value.length>15?value.substring(0,15)+'...':value
+        },
+        timeTrans(timestamp) {
+            let date = new Date(new Date(timestamp).getTime() + 8 * 3600 * 1000)
+            date = date.toJSON();
+            date = date.substring(0, 19).replace('T', ' ')
+            return date 
+        },
+        specTrans(str) {
+            if ( str.indexOf('Ki') == -1 ) {
+                return str
+            }
+            let num = str.slice(0,-2) / 1024 / 1024
+            return num.toFixed(0)
+        },
+        getNamespaces() {
+            httpClient.get(this.namespaceListUrl)
+            .then(res => {
+                this.namespaceList = res.data.items
+            })
+            .catch(res => {
+                this.$message.error({
+                message: res.msg
+                })
+            })
+        },
+        getNodes() {
+            this.appLoading = true
+            this.getNodesData.params.filter_name = this.searchInput
+            this.getNodesData.params.page = this.currentPage
+            this.getNodesData.params.limit = this.pagesize
+            httpClient.get(this.getNodesData.url, {params: this.getNodesData.params})
+            .then(res => {
+                this.nodeList = res.data.items
+                this.nodeTotal = res.data.total
+            })
+            .catch(res => {
+                this.$message.error({
+                message: res.msg
+                })
+            })
+            this.appLoading = false
+        },
+        getNodeDetail(e) {
+            this.getNodeDetailData.params.node_name = e.row.metadata.name
+            this.getNodeDetailData.params.namespace = this.namespaceValue
+            httpClient.get(this.getNodeDetailData.url, {params: this.getNodeDetailData.params})
+            .then(res => {
+                this.nodeDetail = res.data
+                this.contentYaml = this.transYaml(this.nodeDetail)
+                this.yamlDialog = true
+            })
+            .catch(res => {
+                this.$message.error({
+                message: res.msg
+                })
+            })
+        },
+        updateNode() {
+            let content = JSON.stringify(this.transObj(this.contentYaml))
+            this.updateNodeData.params.namespace = this.namespaceValue
+            this.updateNodeData.params.content = content
+            httpClient.put(this.updateNodeData.url, this.updateNodeData.params)
+            .then(res => {
+                this.$message.success({
+                message: res.msg
+                })
+            })
+            .catch(res => {
+                this.$message.error({
+                message: res.msg
+                })
+            })
+            this.yamlDialog = false
+        },
+        delNode(e) {
+            this.delNodeData.params.node_name = e.row.metadata.name
+            this.delNodeData.params.namespace = this.namespaceValue
+            httpClient.delete(this.delNodeData.url, {data: this.delNodeData.params})
+            .then(res => {
+                this.getNodes()
+                this.$message.success({
+                message: res.msg
+                })
+            })
+            .catch(res => {
+                this.$message.error({
+                message: res.msg
+                })
+            })
+        },
+        handleConfirm(obj, operateName, fn) {
+            this.confirmContent = '确认继续 ' + operateName + ' 操作吗？'
+            this.$confirm(this.confirmContent,'提示',{
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+            })
+            .then(() => {
+                fn(obj)
+                })
+            .catch(() => {
+                this.$message.info({
+                    message: '已取消操作'
+                })          
+            })
+        },
+    },
+    beforeMount() {
+        this.getNodes()
+    }
+}
+</script>
+
+
+<style scoped>
+    .node-head-card,.node-body-card {
+        border-radius: 1px;
+        margin-bottom: 5px;
+    }
+    .node-head-search {
+        width:160px;
+        margin-right:10px; 
+    }
+    .node-body-nodename {
+        margin: 0px;
+        color: #4795EE;
+    }
+    .node-body-ip {
+        margin: 0px;
+        color: rgb(145, 145, 145);
+    }
+    .node-body-nodename:hover {
+        color: rgb(84, 138, 238);
+        cursor: pointer;
+        font-weight: bold;
+    }
+</style>
