@@ -81,6 +81,17 @@ env GOOS=linux GOARCH=amd64 go build -o DKube-Server main.go
  ~]# ./DKube-Server
 ```
 
+- 数据库: `config/config.go`
+```shell
+	//数据库配置
+	DbType = "mysql"
+	DbHost = "192.168.66.62"
+	DbPort = 3306
+	DbName = "dkube"
+	DbUser = "root"
+	DbPwd  = "123456"
+```
+
 - 前端 `dkube-web`，后端接口：`src\views\common\Config.js`
 ```shell
 npm install
