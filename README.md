@@ -81,7 +81,7 @@ env GOOS=linux GOARCH=amd64 go build -o DKube-Server main.go
  ~]# ./DKube-Server
 ```
 
-- 前端 `dkube-web`
+- 前端 `dkube-web`，后端接口：`src\views\common\Config.js`
 ```shell
 npm run build
 ```
