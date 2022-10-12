@@ -66,7 +66,7 @@ This is a K8s cluster management platform；DKube Provides a wizard-style operat
 </table>
 
 
-## 使用
+## 部署
 - 修改kube-config路径: `config/config.go`
 
 ```shell
