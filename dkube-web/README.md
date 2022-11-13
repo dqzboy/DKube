@@ -1,6 +1,6 @@
 <div style="text-align: center"></div>
   <p align="center">
-  <img src="https://user-images.githubusercontent.com/42825450/193592031-49863a65-3f0e-4f94-bf98-82dac27b9d58.jpg" width="250px" height="220px">
+  <img src="https://user-images.githubusercontent.com/42825450/201523059-ed28e427-e1b6-443a-8326-100460e6dec9.jpg" width="250px" height="220px">
       <br>
       <i>Make the project development and release simpler, easier and more efficient.</i>
   </p>
