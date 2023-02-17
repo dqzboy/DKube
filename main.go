@@ -10,6 +10,7 @@ import (
 	"net/http"
 )
 
+//初始化
 func main() {
 	db.Init()
 	service.K8s.Init()
