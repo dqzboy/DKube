@@ -6,6 +6,7 @@ import (
 	"github.com/wonderivan/logger"
 )
 
+//登入
 var Login login
 
 type login struct{}
