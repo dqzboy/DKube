@@ -1,5 +1,4 @@
 package service
-
 import (
 	"context"
 	"encoding/json"
@@ -12,7 +11,6 @@ import (
 var Ingress ingress
 
 type ingress struct{}
-
 type IngressesResp struct {
 	Items []nwv1.Ingress `json:"items"`
 	Total int            `json:"total"`
