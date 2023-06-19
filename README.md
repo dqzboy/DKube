@@ -76,10 +76,10 @@ Kubeconfig = "/root/.kube/config"
 
 - 后端
 ```go
-env GOOS=linux GOARCH=amd64 go build -o DKube-Server main.go
+env GOOS=linux GOARCH=amd64 go build -o DKube-Server main。go
 
  ~]# chmod +x DKube-Server 
- ~]# ./DKube-Server
+ ~]# 。/DKube-Server
 ```
 
 - 数据库: `config/config.go`
@@ -98,3 +98,6 @@ DbPwd  = "123456"
 npm install
 npm run build
 ```
+
+## 推荐
+更多学习教程请关注 [浅时光博客](https://www.dqzboy.com/)
