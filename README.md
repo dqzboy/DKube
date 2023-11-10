@@ -98,6 +98,3 @@ DbPwd  = "123456"
 npm install
 npm run build
 ```
-
-## 推荐 | recommend
-更多学习教程请关注 [浅时光博客](https://www.dqzboy.com/)
