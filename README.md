@@ -11,6 +11,10 @@
 ## What is DKube
 This is a K8s cluster management platform；DKube Provides a wizard-style operation interface for K8s cluster management to help your team manage your cluster environment quickly and easily
 
+## 前端 | Front
+- 前端项目仓库访问地址如下：<br>
+[DKube-Web](https://github.com/dqzboy/DKube-Web)
+
 ## 功能 | Function
 
 <details>
@@ -68,6 +72,7 @@ This is a K8s cluster management platform；DKube Provides a wizard-style operat
 
 
 ## 部署 | deploy
+### 后端
 - 修改kube-config路径: `config/config.go`
 
 ```shell
@@ -91,4 +96,10 @@ DbPort = 3306
 DbName = "dkube"
 DbUser = "root"
 DbPwd  = "123456"
+```
+
+### 前端
+```shell
+npm install
+npm run build
 ```
