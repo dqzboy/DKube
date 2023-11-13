@@ -92,9 +92,3 @@ DbName = "dkube"
 DbUser = "root"
 DbPwd  = "123456"
 ```
-
-- 前端 `dkube-web`，后端接口：`src\views\common\Config.js`
-```shell
-npm install
-npm run build
-```
