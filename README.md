@@ -12,8 +12,7 @@
 This is a K8s cluster management platform；DKube Provides a wizard-style operation interface for K8s cluster management to help your team manage your cluster environment quickly and easily
 
 ## 前端 | Front
-- 前端项目仓库访问地址如下：<br>
-[DKube-Web](https://github.com/dqzboy/DKube-Web)
+- 前端项目仓库地址：[DKube-Web](https://github.com/dqzboy/DKube-Web)
 
 ## 功能 | Function
 
