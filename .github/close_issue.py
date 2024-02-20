@@ -3,7 +3,7 @@ import requests
 
 issue_labels = ['no respect']
 github_repo = 'dqzboy/DKube'
-github_token = os.getenv("GITHUB_TOKEN")
+github_token = os.getenv("MY_GITHUB_TOKEN")
 headers = {
     'Authorization': 'Bearer ' + github_token,
     'Accept': 'application/vnd.github+json',
