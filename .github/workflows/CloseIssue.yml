@@ -20,5 +20,5 @@ jobs:
 
       - name: Run close_issue.py Script
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: python .github/close_issue.py
