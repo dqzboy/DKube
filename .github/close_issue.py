@@ -2,7 +2,7 @@ import os
 import requests
 
 issue_labels = ['no respect']
-github_repo = 'dqzboy/ChatGPT-Proxy'
+github_repo = 'dqzboy/DKube'
 github_token = os.getenv("MY_GITHUB_TOKEN")
 headers = {
     'Authorization': 'Bearer ' + github_token,
