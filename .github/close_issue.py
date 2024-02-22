@@ -2,8 +2,8 @@ import os
 import requests
 
 issue_labels = ['no respect']
-github_repo = 'dqzboy/DKube'
-github_token = os.getenv("MY_GITHUB_TOKEN")
+github_repo = 'dqzboy/ChatGPT-Proxy'
+github_token = os.getenv("GITHUB_TOKEN")
 headers = {
     'Authorization': 'Bearer ' + github_token,
     'Accept': 'application/vnd.github+json',
@@ -100,4 +100,5 @@ if '__main__' == __name__:
             print('issue: {}, login: {} not in stargazers'.format(issue['number'], login))
             close_issue(github_repo, issue['number'])
             lock_issue(github_repo, issue['number'])
+
     print('done')
