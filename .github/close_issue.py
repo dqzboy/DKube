@@ -5,7 +5,7 @@ issue_labels = ['no respect']
 github_repo = 'dqzboy/DKube'
 github_token = os.getenv("MY_GITHUB_TOKEN")
 headers = {
-    'Authorization': 'Bearer ' + my_github_token,
+    'Authorization': 'Bearer ' + github_token,
     'Accept': 'application/vnd.github+json',
     'X-GitHub-Api-Version': '2022-11-28',
 }
