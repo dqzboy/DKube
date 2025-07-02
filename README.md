@@ -102,3 +102,9 @@ DbPwd  = "123456"
 npm install
 npm run build
 ```
+
+## 推广
+[本项目 CDN 加速及安全防护由 Tencent EdgeOne 赞助](https://edgeone.ai/zh?from=github)
+
+<img src="https://github.com/user-attachments/assets/2d7a5081-a0e7-4d4d-9148-c3c424f23cc8" width="300" height="80">
+
