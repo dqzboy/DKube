@@ -104,6 +104,30 @@ npm run build
 ```
 
 ## 推广
+
+<table style="width: 100%; table-layout: fixed;">
+    <tr>
+      <td width="50%" align="center"><b>海外服务器</b></td>
+      <td width="50%" align="center"><b>海外服务器</b></td>
+    </tr>
+    <tr>
+        <td width="50%" align="center">
+            <a href="https://dqzboy.github.io/proxyui/racknerd" target="_blank">
+                <img src="https://cdn.jsdelivr.net/gh/dqzboy/Images/dqzboy-proxy/1.png?raw=true" 
+                     alt="RackNerd" 
+                     style="width: 100%; height: auto; max-width: 400px; object-fit: contain;">
+            </a>
+        </td>
+        <td width="50%" align="center">
+            <a href="https://dqzboy.github.io/proxyui/CloudCone" target="_blank">
+                <img src="https://cdn.jsdelivr.net/gh/dqzboy/Images/dqzboy-proxy/2.png?raw=true" 
+                     alt="CloudCone" 
+                     style="width: 100%; height: auto; max-width: 400px; object-fit: contain;">
+            </a>
+        </td>
+    </tr>
+</table>
+
 [本项目 CDN 加速及安全防护由 Tencent EdgeOne 赞助](https://edgeone.ai/zh?from=github)
 
 <img src="https://github.com/user-attachments/assets/2d7a5081-a0e7-4d4d-9148-c3c424f23cc8" width="300" height="80">
